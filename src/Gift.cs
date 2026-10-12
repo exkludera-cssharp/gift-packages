@@ -2,9 +2,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Utils;
-using CS2TraceRay.Class;
-using CS2TraceRay.Enum;
-using CS2TraceRay.Struct;
 
 public partial class Plugin
 {
@@ -53,16 +50,17 @@ public partial class Plugin
         }
         else
         {
-            CGameTrace? trace = TraceRay.TraceShape(gifter.GetEyePosition()!, pawn.EyeAngles, TraceMask.MaskShot, gifter);
-            if (trace == null || !trace.HasValue || trace.Value.Position.Length() == 0)
+            Vector? eyePosition = new(pawn.AbsOrigin!.X, pawn.AbsOrigin.Y, pawn.AbsOrigin.Z + pawn.ViewOffset.Z);
+            if (eyePosition == null) return;
+
+            var trace = Trace.TraceShape(eyePosition, pawn.EyeAngles, pawn);
+            if (!trace.DidHit())
             {
                 Utils.PrintToChat(gifter, $"{ChatColors.Red}Could not find a valid location to spawn gift");
                 return;
             }
 
-            var endPos = trace.Value.Position;
-
-            entity.Teleport(new(endPos.X, endPos.Y, endPos.Z), gifter.AbsRotation);
+            entity.Teleport(new(trace.EndPos.X, trace.EndPos.Y, trace.EndPos.Z), gifter.AbsRotation);
         }
 
         var trigger = CreateTrigger(entity);
